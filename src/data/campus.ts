@@ -65,7 +65,7 @@ const corridorFloor = (
   ];
   // attach each room to its nearest corridor node
   for (const room of rooms) {
-    let best = nodes[0];
+    let best = nodes[0]!;
     let bestDist = Infinity;
     for (const n of nodes) {
       const d = Math.hypot(n.x - room.x, n.y - room.y);

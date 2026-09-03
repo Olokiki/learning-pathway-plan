@@ -78,7 +78,7 @@ const shortestPath = (graph: Graph, fromId: string, toId: string): Point[] => {
     if (cursor === fromId) break;
     cursor = previous.get(cursor);
   }
-  return path.length && path[0].id === fromId ? path : [];
+  return path.length && path[0]!.id === fromId ? path : [];
 };
 
 const pathLength = (path: Point[]) =>
@@ -142,21 +142,21 @@ export const routeBetweenBuildings = (from: Building, to: Building): Route => {
   const steps: RouteStep[] = [];
   steps.push({
     index: 1,
-    text: `Leave ${from.name} heading ${path.length > 1 ? bearing(path[0], path[1]) : "out"}`,
-    point: path[0] ?? { id: "start", x: from.x, y: from.y },
+    text: `Leave ${from.name} heading ${path.length > 1 ? bearing(path[0]!, path[1]) : "out"}`,
+    point: path[0]! ?? { id: "start", x: from.x, y: from.y },
   });
   for (let i = 1; i < path.length - 1; i += 1) {
-    const legMetres = Math.round(dist(path[i], path[i + 1]) * METRES_PER_PERCENT);
+    const legMetres = Math.round(dist(path[i]!, path[i + 1]!) * METRES_PER_PERCENT);
     steps.push({
       index: steps.length + 1,
-      text: `${turnFrom(path[i - 1], path[i], path[i + 1])} and walk about ${legMetres} m`,
-      point: path[i],
+      text: `${turnFrom(path[i - 1]!, path[i]!, path[i + 1]!)} and walk about ${legMetres} m`,
+      point: path[i]!,
     });
   }
   steps.push({
     index: steps.length + 1,
     text: `Arrive at ${to.name}`,
-    point: path[path.length - 1] ?? { id: "end", x: to.x, y: to.y },
+    point: path[path.length - 1]! ?? { id: "end", x: to.x, y: to.y },
   });
 
   return { path, metres, minutes: minutesFor(metres), steps };
@@ -194,24 +194,24 @@ export const routeBetweenRooms = (
       {
         index: 1,
         text: `Exit ${nameOf(aId)} into the ${floor.label} corridor`,
-        point: path[0],
+        point: path[0]!,
       },
     ];
     for (let i = 1; i < path.length - 1; i += 1) {
       const legMetres = Math.max(
         2,
-        Math.round(dist(path[i], path[i + 1]) * METRES_PER_PERCENT_INDOOR),
+        Math.round(dist(path[i]!, path[i + 1]!) * METRES_PER_PERCENT_INDOOR),
       );
       steps.push({
         index: steps.length + 1,
-        text: `${turnFrom(path[i - 1], path[i], path[i + 1])}, about ${legMetres} m along the corridor`,
-        point: path[i],
+        text: `${turnFrom(path[i - 1]!, path[i]!, path[i + 1]!)}, about ${legMetres} m along the corridor`,
+        point: path[i]!,
       });
     }
     steps.push({
       index: steps.length + 1,
       text: `Arrive at ${nameOf(bId)}`,
-      point: path[path.length - 1],
+      point: path[path.length - 1]!,
     });
     return {
       path,
@@ -238,7 +238,7 @@ export const routeBetweenRooms = (
   if (first) {
     const goingUp = endFloor.level > startFloor.level;
     first.steps[first.steps.length - 1] = {
-      ...first.steps[first.steps.length - 1],
+      ...first.steps[first.steps.length - 1]!,
       text: `Take the stairs or lift ${goingUp ? "up" : "down"} to ${endFloor.label}`,
     };
     legs.push({ ...first, crossesFloors: true });
