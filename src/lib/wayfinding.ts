@@ -82,7 +82,7 @@ const shortestPath = (graph: Graph, fromId: string, toId: string): Point[] => {
 };
 
 const pathLength = (path: Point[]) =>
-  path.slice(1).reduce((total, point, index) => total + dist(path[index], point), 0);
+  path.slice(1).reduce((total, point, index) => total + dist(path[index]!, point), 0);
 
 export interface RouteStep {
   index: number;
@@ -142,8 +142,8 @@ export const routeBetweenBuildings = (from: Building, to: Building): Route => {
   const steps: RouteStep[] = [];
   steps.push({
     index: 1,
-    text: `Leave ${from.name} heading ${path.length > 1 ? bearing(path[0]!, path[1]) : "out"}`,
-    point: path[0]! ?? { id: "start", x: from.x, y: from.y },
+    text: `Leave ${from.name} heading ${path.length > 1 ? bearing(path[0]!, path[1]!) : "out"}`,
+    point: path[0] ?? { id: "start", x: from.x, y: from.y },
   });
   for (let i = 1; i < path.length - 1; i += 1) {
     const legMetres = Math.round(dist(path[i]!, path[i + 1]!) * METRES_PER_PERCENT);
@@ -156,7 +156,7 @@ export const routeBetweenBuildings = (from: Building, to: Building): Route => {
   steps.push({
     index: steps.length + 1,
     text: `Arrive at ${to.name}`,
-    point: path[path.length - 1]! ?? { id: "end", x: to.x, y: to.y },
+    point: path[path.length - 1] ?? { id: "end", x: to.x, y: to.y },
   });
 
   return { path, metres, minutes: minutesFor(metres), steps };
