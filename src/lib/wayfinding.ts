@@ -94,7 +94,20 @@ export interface RouteStep {
 }
 
 export interface Route {
+  /**
+   * Ordered points making up the route.
+   * These are used by the 2D map today and will drive
+   * avatar movement in the 3D campus later.
+   */
   path: Point[];
+
+  /**
+   * Explicit navigation waypoints.
+   * Kept separate from `path` so the 3D navigation
+   * system has a clear contract to consume.
+   */
+  waypoints: Point[];
+
   metres: number;
   minutes: Record<PersonaId, number>;
   steps: RouteStep[];
@@ -162,7 +175,7 @@ export const routeBetweenBuildings = (from: Building, to: Building): Route => {
     point: path[path.length - 1] ?? { id: "end", x: to.x, y: to.y },
   });
 
-  return { path, metres, minutes: minutesFor(metres), steps };
+  return { path,waypoints:path, metres, minutes: minutesFor(metres), steps };
 };
 
 export interface IndoorRoute extends Route {
@@ -218,6 +231,7 @@ export const routeBetweenRooms = (
     });
     return {
       path,
+      waypoints: path,
       metres,
       minutes: minutesFor(metres * 6),
       steps,
