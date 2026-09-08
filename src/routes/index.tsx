@@ -5,6 +5,7 @@ import { AvatarPicker, avatarBg, useAvatar } from "@/components/AvatarPicker";
 import { CampusMap } from "@/components/CampusMap";
 import { FloorPlan } from "@/components/FloorPlan";
 import { BUILDINGS, LECTURERS, PERSONAS, type Building, type PersonaId } from "@/data/campus";
+import { searchLocations } from "@/lib/search";
 import {
   allRooms,
   nearestBuilding,
@@ -90,21 +91,7 @@ function Index() {
   const indoorMetres = indoorLegs.reduce((t, l) => t + l.metres, 0);
 
   const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
-    const rooms = allRooms()
-      .filter(
-        ({ room, building }) =>
-          room.name.toLowerCase().includes(q) || building.name.toLowerCase().includes(q),
-      )
-      .slice(0, 6);
-    const staff = LECTURERS.filter(
-      (l) => l.name.toLowerCase().includes(q) || l.department.toLowerCase().includes(q),
-    ).slice(0, 4);
-    return [
-      ...staff.map((l) => ({ kind: "lecturer" as const, lecturer: l })),
-      ...rooms.map((r) => ({ kind: "room" as const, ...r })),
-    ];
+    return searchLocations(query);
   }, [query]);
 
   const openIndoor = (buildingId: string, roomId: string) => {
@@ -180,42 +167,76 @@ function Index() {
 
           {results.length > 0 && (
             <ul className="animate-rise absolute inset-x-4 z-30 mt-2 max-h-72 overflow-auto rounded-2xl border border-line bg-panel p-1 shadow-lg">
-              {results.map((r) =>
-                r.kind === "lecturer" ? (
-                  <li key={r.lecturer.id}>
-                    <button
-                      onClick={() => openIndoor(r.lecturer.buildingId, r.lecturer.roomId)}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-canvas"
-                    >
-                      <span
-                        className={`size-2 rounded-full ${STATUS_STYLES[r.lecturer.status].dot}`}
-                      />
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-semibold">
-                          {r.lecturer.name}
-                        </span>
-                        <span className="block font-mono text-[10px] text-muted-foreground">
-                          {r.lecturer.note}
-                        </span>
-                      </span>
-                    </button>
-                  </li>
-                ) : (
-                  <li key={r.room.id}>
-                    <button
-                      onClick={() => openIndoor(r.building.id, r.room.id)}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-canvas"
-                    >
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-semibold">{r.room.name}</span>
-                        <span className="block font-mono text-[10px] text-muted-foreground">
-                          {r.building.short} · {r.floor.label}
-                        </span>
-                      </span>
-                    </button>
-                  </li>
-                ),
-              )}
+         {results.map((location) => (
+  <li key={location.id}>
+    <button
+      onClick={() => {
+        if (location.buildingId && location.type !== "building") {
+          const building = BUILDINGS.find(
+            (b) => b.id === location.buildingId,
+          );
+
+          if (building) {
+            setDestinationId(building.id);
+          }
+
+          if (location.floorId) {
+            setFloorId(location.floorId);
+          }
+
+          if (location.id.startsWith("lecturer-")) {
+            const lecturerId = location.id.replace("lecturer-", "");
+            const lecturer = LECTURERS.find(
+              (l) => l.id === lecturerId,
+            );
+
+            if (lecturer) {
+              openIndoor(lecturer.buildingId, lecturer.roomId);
+              return;
+            }
+          }
+
+          openIndoor(location.buildingId, location.id);
+          return;
+        }
+
+        const building = BUILDINGS.find(
+          (b) => b.id === location.id,
+        );
+
+        if (building) {
+          selectBuilding(building);
+        }
+      }}
+      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-canvas"
+    >
+      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-canvas text-xs">
+        {location.type === "building"
+          ? "⌂"
+          : location.type === "office"
+            ? "◉"
+            : location.type === "hall"
+              ? "▣"
+              : location.type === "lab"
+                ? "◇"
+                : "•"}
+      </span>
+
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-semibold">
+          {location.name}
+        </span>
+
+        <span className="block truncate font-mono text-[10px] text-muted-foreground">
+          {location.buildingId
+            ? BUILDINGS.find((b) => b.id === location.buildingId)?.short ??
+              location.type
+            : location.type}
+        </span>
+      </span>
+    </button>
+  </li>
+))}
             </ul>
           )}
         </div>
