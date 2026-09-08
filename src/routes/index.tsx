@@ -51,6 +51,7 @@ function Index() {
 
   const [position, setPosition] = useState({ x: 26, y: 44 });
   const [gpsLive, setGpsLive] = useState(false);
+  const [manualOriginId, setManualOriginId] = useState<string | null>(null);
 
   const [destinationId, setDestinationId] = useState<string | null>("caf1");
   const [indoorBuildingId, setIndoorBuildingId] = useState("cst");
@@ -73,7 +74,16 @@ function Index() {
     return () => navigator.geolocation.clearWatch(watcher);
   }, []);
 
-  const origin = useMemo(() => nearestBuilding(position.x, position.y), [position]);
+ const origin = useMemo(() => {
+  if (manualOriginId) {
+    return (
+      BUILDINGS.find((building) => building.id === manualOriginId) ??
+      nearestBuilding(position.x, position.y)
+    );
+  }
+
+  return nearestBuilding(position.x, position.y);
+}, [manualOriginId, position]);
   const destination = BUILDINGS.find((b) => b.id === destinationId) ?? null;
   const outdoorRoute = useMemo(
     () => (destination ? routeBetweenBuildings(origin, destination) : null),
@@ -240,6 +250,34 @@ function Index() {
             </ul>
           )}
         </div>
+
+          <div className="relative z-10 mx-4 mt-3">
+  <label
+    htmlFor="starting-point"
+    className="mb-1 block font-mono text-[10px] uppercase tracking-wide text-muted-foreground"
+  >
+    Starting point
+  </label>
+
+  <select
+    id="starting-point"
+    value={manualOriginId ?? ""}
+    onChange={(e) =>
+      setManualOriginId(e.target.value || null)
+    }
+    className="w-full rounded-xl border border-line bg-panel px-3 py-2 text-sm outline-none"
+  >
+    <option value="">
+      {gpsLive ? "Use my current GPS location" : "Use current location"}
+    </option>
+
+    {BUILDINGS.map((building) => (
+      <option key={building.id} value={building.id}>
+        {building.name}
+      </option>
+    ))}
+  </select>
+</div>
 
         <div className="relative z-10 mx-4 mt-3 flex gap-1 rounded-full border border-line bg-panel/70 p-1">
           {(["outdoor", "indoor"] as const).map((m) => (
