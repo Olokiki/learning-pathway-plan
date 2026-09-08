@@ -3,8 +3,6 @@ import {
   MAP_BOUNDS,
   METRES_PER_PERCENT,
   METRES_PER_PERCENT_INDOOR,
-  OUTDOOR_EDGES,
-  OUTDOOR_NODES,
   PERSONAS,
   WALK_SPEED,
   type Building,
@@ -12,6 +10,11 @@ import {
   type PersonaId,
   type RoomNode,
 } from "@/data/campus";
+
+import {
+  PATH_EDGES,
+  PATH_NODES,
+} from "@/data/pathways";
 
 export interface Point {
   id: string;
@@ -122,16 +125,16 @@ const turnFrom = (previous: Point, pivot: Point, next: Point) => {
 /** Outdoor route between two buildings, snapped to the walkway graph. */
 export const routeBetweenBuildings = (from: Building, to: Building): Route => {
   const points: Point[] = [
-    ...OUTDOOR_NODES,
+    ...PATH_NODES,
     { id: `b-${from.id}`, x: from.x, y: from.y },
     { id: `b-${to.id}`, x: to.x, y: to.y },
   ];
   const nearest = (p: Point) =>
-    OUTDOOR_NODES.reduce((best, node) =>
+    PATH_NODES.reduce((best, node) =>
       dist(node, p) < dist(best, p) ? node : best,
     );
   const edges: [string, string][] = [
-    ...OUTDOOR_EDGES,
+    ...PATH_EDGES,
     [`b-${from.id}`, nearest({ id: "", x: from.x, y: from.y }).id],
     [`b-${to.id}`, nearest({ id: "", x: to.x, y: to.y }).id],
   ];
